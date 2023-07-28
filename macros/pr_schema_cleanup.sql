@@ -1,3 +1,9 @@
+{# 
+    This macro finds PR schemas older than a set date and drops them 
+    The maco defaults to 10 days old, but can be configued with the input argument age_in_days
+    Sample usage with different date:
+        dbt run-operation pr_schema_cleanup --args "{'database_to_clean': 'analytics','age_in_days':'15'}"
+#}
 {% macro pr_schema_cleanup(database_to_clean, age_in_days=10) %}
 
     {% set find_old_schemas %}
@@ -6,7 +12,7 @@
         from {{ database_to_clean }}.information_schema.schemata
         where
             catalog_name = '{{ database_to_clean | upper }}'
-            and schema_name ilike 'inquirer_dbt_pr_%'
+            and schema_name ilike 'DBT_CLOUD_PR%'
             and last_altered <= (current_date() - interval '{{ age_in_days }} days')
     {% endset %}
 

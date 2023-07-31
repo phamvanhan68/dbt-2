@@ -3,11 +3,14 @@ name: Python CI
 on:
   - pull_request
 
+env:
+  DBT_SCHEMA: ${{ format('inquirer_dbt_pr_{0}', github.event.pull_request.number ) }}
+  KEY_FILE: /home/runner/work/dbt-2/dbt-2/.github/workflows/dbt_service_account.json
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      KEY_FILE: /home/runner/work/dbt-2/dbt-2/.github/workflows/dbt_service_account.json
+
 
     steps:
     - name: Checkout repository
@@ -30,6 +33,9 @@ jobs:
       run: "echo $GOOGLE_APPLICATION_CREDENTIALS > $KEY_FILE"
 
     - name: Run Python script
+      env:
+        DATASET_NAME: $DBT_SCHEMA
+        PROJECT_ID: iron-burner-394207
       run: |
         python - <<EOF
         from google.cloud import bigquery
@@ -37,11 +43,13 @@ jobs:
 
         credentials_file = '/home/runner/work/dbt-2/dbt-2/.github/workflows/dbt_service_account.json'
         credentials = service_account.Credentials.from_service_account_file(credentials_file)
-        client = bigquery.Client(credentials=credentials, project='iron-burner-394207')
+        client = bigquery.Client(credentials=credentials, project=os.environ['PROJECT_ID'])
+
+        print("Dataset from ENV: {}".format(os.environ['DATASET_NAME']))
 
         dataset_id = 'testing_01'
         response = client.delete_dataset(
-            dataset_id, delete_contents=True, not_found_ok=True
+          dataset_id, delete_contents=True, not_found_ok=True
         )
 
         print("Deleted dataset '{}'.".format(dataset_id))

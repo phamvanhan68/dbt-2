@@ -34,7 +34,7 @@ jobs:
 
     - name: Run Python script
       env:
-        DATASET_NAME: $DBT_SCHEMA
+        DATASET_NAME: ${{ env.DBT_SCHEMA }}
         PROJECT_ID: iron-burner-394207
       run: |
         python - <<EOF

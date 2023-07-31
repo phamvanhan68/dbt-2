@@ -31,6 +31,7 @@ jobs:
 
     - name: Run Python script
       run: |
+        python - <<EOF
         from google.cloud import bigquery
         from google.oauth2 import service_account
 
@@ -44,3 +45,4 @@ jobs:
         )
 
         print("Deleted dataset '{}'.".format(dataset_id))
+        EOF

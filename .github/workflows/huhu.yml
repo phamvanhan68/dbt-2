@@ -1,0 +1,46 @@
+name: Python CI
+
+on:
+  - pull_request
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      KEY_FILE: /home/runner/work/dbt-2/dbt-2/.github/workflows/dbt_service_account.json
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install google-cloud-bigquery
+
+    - name: Set up Google Cloud credentials
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+      shell: bash
+      run: "echo $GOOGLE_APPLICATION_CREDENTIALS > $KEY_FILE"
+
+    - name: Run Python script
+      run: |
+        from google.cloud import bigquery
+        from google.oauth2 import service_account
+
+        credentials_file = '/home/runner/work/dbt-2/dbt-2/.github/workflows/dbt_service_account.json'
+        credentials = service_account.Credentials.from_service_account_file(credentials_file)
+        client = bigquery.Client(credentials=credentials, project='iron-123')
+
+        dataset_id = 'testing_01'
+        response = client.delete_dataset(
+            dataset_id, delete_contents=True, not_found_ok=True
+        )
+
+        print("Deleted dataset '{}'.".format(dataset_id))

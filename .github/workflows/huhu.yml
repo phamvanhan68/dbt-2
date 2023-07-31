@@ -1,6 +1,9 @@
 name: Python CI
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
 
 env:
   KEY_FILE: /home/runner/work/dbt-2/dbt-2/.github/workflows/dbt_service_account.json

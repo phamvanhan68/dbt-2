@@ -33,7 +33,7 @@ jobs:
 
     - name: Run Python script
       env:
-        DBT_SCHEMA: ${{ format('inquirer_dbt_pr_{0}', github.event.pull_request.number ) }}
+        DATASET_NAME: ${{ format('inquirer_dbt_pr_{0}', github.event.pull_request.number ) }}
         PROJECT_ID: iron-burner-394207
         CREDENTIAL_FILE: ${{ env.KEY_FILE }}
       run: |

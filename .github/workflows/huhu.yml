@@ -3,23 +3,10 @@ name: Python CI
 on:
   workflow_dispatch:
     inputs:
-      logLevel:
-        description: 'Log level'
+      numberPR:
+        description: 'Enter your text input'
         required: true
-        default: 'warning'
-        type: choice
-        options:
-        - info
-        - warning
-        - debug
-      tags:
-        description: 'Test scenario tags'
-        required: false
-        type: boolean
-      environment:
-        description: 'Environment to run tests against'
-        type: environment
-        required: true
+
 
 env:
   KEY_FILE: /home/runner/work/dbt-2/dbt-2/.github/workflows/dbt_service_account.json
@@ -54,6 +41,7 @@ jobs:
         DATASET_NAME: ${{ format('inquirer_dbt_pr_{0}', github.event.pull_request.number ) }}
         PROJECT_ID: iron-burner-394207
         CREDENTIAL_FILE: ${{ env.KEY_FILE }}
+        MANUAL_RUN_DATASET: ${{ github.event.inputs.numberPR }} 
       run: |
         python - <<EOF
         from google.cloud import bigquery
@@ -66,7 +54,7 @@ jobs:
 
         print("Dataset from ENV: {}".format(os.environ['DATASET_NAME']))
 
-        dataset_id = 'testing_01'
+        dataset_id = 'testing_{}'.format(os.environ['MANUAL_RUN_DATASET']) if os.environ['MANUAL_RUN_DATASET'] else 'testing_01'
         response = client.delete_dataset(
           dataset_id, delete_contents=True, not_found_ok=True
         )

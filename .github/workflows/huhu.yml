@@ -6,7 +6,7 @@ on:
       numberPR:
         description: 'Enter your text input'
         required: true
-
+  pull_request:
 
 env:
   KEY_FILE: /home/runner/work/dbt-2/dbt-2/.github/workflows/dbt_service_account.json
@@ -38,7 +38,7 @@ jobs:
 
     - name: Run Python script
       env:
-        DATASET_NAME: ${{ format('inquirer_dbt_pr_{0}', github.event.pull_request.number ) }}
+        DATASET_NAME: ${{ format('testing_{0}', github.event.pull_request.number ) }}
         PROJECT_ID: iron-burner-394207
         CREDENTIAL_FILE: ${{ env.KEY_FILE }}
         MANUAL_RUN_DATASET: ${{ github.event.inputs.numberPR }} 
@@ -52,9 +52,9 @@ jobs:
         credentials = service_account.Credentials.from_service_account_file(credentials_file)
         client = bigquery.Client(credentials=credentials, project=os.environ['PROJECT_ID'])
 
-        print("Dataset from ENV: {}".format(os.environ['DATASET_NAME']))
+        print("MANUAL_RUN_DATASET from ENV: {}".format(os.environ['MANUAL_RUN_DATASET']))
 
-        dataset_id = 'testing_{}'.format(os.environ['MANUAL_RUN_DATASET']) if os.environ['MANUAL_RUN_DATASET'] else 'testing_01'
+        dataset_id = 'testing_{}'.format(os.environ['MANUAL_RUN_DATASET']) if os.environ['MANUAL_RUN_DATASET'] else os.environ['DATASET_NAME']
         response = client.delete_dataset(
           dataset_id, delete_contents=True, not_found_ok=True
         )

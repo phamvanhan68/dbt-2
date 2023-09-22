@@ -1,0 +1,63 @@
+name: Python CI
+
+on:
+  workflow_dispatch:
+    inputs:
+      numberPR:
+        description: 'Enter your text input'
+        required: true
+  pull_request:
+
+env:
+  KEY_FILE: /home/runner/work/dbt-2/dbt-2/.github/workflows/dbt_service_account.json
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install google-cloud-bigquery
+
+    - name: Set up Google Cloud credentials
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+      shell: bash
+      run: "echo $GOOGLE_APPLICATION_CREDENTIALS > $KEY_FILE"
+
+    - name: Run Python script
+      env:
+        DATASET_NAME: ${{ format('testing_{0}', github.event.pull_request.number ) }}
+        PROJECT_ID: iron-burner-394207
+        CREDENTIAL_FILE: ${{ env.KEY_FILE }}
+        MANUAL_RUN_DATASET: ${{ github.event.inputs.numberPR }} 
+      run: |
+        python - <<EOF
+        from google.cloud import bigquery
+        from google.oauth2 import service_account
+        import os
+
+        credentials_file = os.environ['CREDENTIAL_FILE']
+        credentials = service_account.Credentials.from_service_account_file(credentials_file)
+        client = bigquery.Client(credentials=credentials, project=os.environ['PROJECT_ID'])
+
+        print("MANUAL_RUN_DATASET from ENV: {}".format(os.environ['MANUAL_RUN_DATASET']))
+
+        dataset_id = 'testing_{}'.format(os.environ['MANUAL_RUN_DATASET']) if os.environ['MANUAL_RUN_DATASET'] else os.environ['DATASET_NAME']
+        response = client.delete_dataset(
+          dataset_id, delete_contents=True, not_found_ok=True
+        )
+
+        print("Deleted dataset '{}'.".format(dataset_id))
+        EOF
